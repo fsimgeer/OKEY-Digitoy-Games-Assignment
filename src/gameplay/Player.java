@@ -56,8 +56,25 @@ public class Player {
 		reds.sort(null);
 		
 		
-		System.out.println("containsOkey: " + containsOkey);
-		System.out.println(yellows.toString());
+		System.out.println("Yellows:" + yellows.toString());
+		System.out.println(findSameColoredTileGroups(yellows).toString());
+
+		System.out.println("Blues:\t" + blues.toString());
+		System.out.println(findSameColoredTileGroups(blues).toString());
+
+		System.out.println("Blacks:\t" + blacks.toString());
+		System.out.println(findSameColoredTileGroups(blacks).toString());
+
+		System.out.println("Reds:\t" + reds.toString());
+		System.out.println(findSameColoredTileGroups(reds).toString());
+		
+		ArrayList<ArrayList<Tile>> sameNumbered = findSameNumberedTileGroups(yellows, blues, blacks, reds);
+		for(int i = 0; i < sameNumbered.size(); i++) {
+			for(Tile t : sameNumbered.get(i)) {
+				System.out.print(t.toString() + ", ");
+			}
+			System.out.println();
+		}
 	}
 	
 	public int numberOfDuplicates() {
@@ -69,6 +86,122 @@ public class Player {
 			}
 		}
 		return ((temp - tiles.size()) / 2);
+	}
+	
+	public ArrayList<ArrayList<Integer>> findSameColoredTileGroups(ArrayList<Integer> list){
+		if(list.isEmpty()) {
+			return null;
+		}
+		ArrayList<ArrayList<Integer>> temp = new ArrayList<>();
+		ArrayList<Integer> temp2 = new ArrayList<>();
+		int i = 0;
+		int j = 0;
+		
+		while(i < list.size()) {
+			//flag = false;
+			temp2.add(list.get(i));
+			while(list.contains(temp2.get(j) + 1)) {
+				temp2.add(temp2.get(j) + 1);
+				j++;
+				i++;
+			}
+			if(temp2.size() > 1) {
+				temp.add(new ArrayList<Integer>(temp2));
+			}
+			i++;
+			temp2.clear();
+			j = 0;
+		}
+		
+		boolean done = false;
+		if(list.contains(1) && list.contains(13) && !list.contains(2)) {
+			for(ArrayList<Integer> el : temp) {
+				if(el.contains(13)) {
+					el.add(1);
+					done = true;
+				}
+			}
+			if(!done) {
+				temp.add(new ArrayList<Integer>() {{add(13); add(1);}});
+			}
+		} else if (list.contains(1) && list.contains(13)) {
+			int numOfOnes = 0;
+			for(int integ : list) {
+				if(integ == 1)
+					numOfOnes++;
+			}
+			if(numOfOnes > 1) {
+				for(ArrayList<Integer> el : temp) {
+					if(el.contains(13)) {
+						el.add(1);
+						done = true;
+					}
+				}
+				if(!done) {
+					temp.add(new ArrayList<Integer>() {
+						{
+							add(13);
+							add(1);
+						}
+					});
+				}
+			} else {
+				int size2 = 0;
+				int size13 = 0;
+				for(ArrayList<Integer> el : temp) {
+					if(el.contains(2)) {
+						size2 = el.size();
+					} else if(el.contains(13)) {
+						size13 = el.size();
+					}
+				}
+				System.out.println(size2 + " " + size13);
+				if(size13 >= size2) {
+					for(ArrayList<Integer> el : temp) {
+						if(el.contains(13)) {
+							el.add(1);
+						} else if(el.contains(2)) {
+							if(el.size() == 2) {
+								el.clear();
+							} else {
+								el.remove(el.indexOf(1));
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		for(ArrayList<Integer> l : temp) {
+			if(l.isEmpty()) {
+				temp.remove(l);
+			}
+		}
+
+		return temp;
+	}
+	
+	public ArrayList<ArrayList<Tile>> findSameNumberedTileGroups(ArrayList<Integer> yellows, ArrayList<Integer> blues,ArrayList<Integer> blacks,ArrayList<Integer> reds){
+		ArrayList<ArrayList<Tile>> temp = new ArrayList<ArrayList<Tile>>();
+		
+		for(int i = 1; i <= 13; i++) {
+			ArrayList<Tile> temp2 = new ArrayList<Tile>();
+			if(yellows.contains(i)) {
+				temp2.add(new Tile(TileColor.Sarı, i));
+			}
+			if(blues.contains(i)) {
+				temp2.add(new Tile(TileColor.Mavi, i));
+			}
+			if(blacks.contains(i)) {
+				temp2.add(new Tile(TileColor.Siyah, i));
+			}
+			if(reds.contains(i)) {
+				temp2.add(new Tile(TileColor.Kırmızı, i));
+			}
+			temp.add(temp2);
+		}
+		
+		return temp;
 	}
 	
 	public void print(Tile okey) {
