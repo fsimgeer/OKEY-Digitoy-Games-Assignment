@@ -1,34 +1,46 @@
 package gameplay;
 
 public class Tile {
-	private TileColor color;
+	private TileType type;
 	private int number;
 	
 	// constructor
-	public Tile(TileColor color, int number) {
-		this.color = color;
+	public Tile(TileType type, int number) {
+		this.type = type;
 		this.number = number;
 	}
 	
 	// methods
-	public TileColor getColor() {
-		return color;
+	public TileType getType() {
+		return type;
 	}
 	
 	public int getNumber() {
 		return number;
 	}
 	
-	public boolean equals(Tile tile) {
-		if(color == tile.color && number == tile.number)
+	@Override
+	public boolean equals(Object other) {
+		if(this == other)
 			return true;
-		return false;
+		if(!(other instanceof Tile))
+			return false;
+		Tile tile = (Tile) other;
+		return (type == tile.type && number == tile.number);
 	}
 	
+	@Override
+	public int hashCode() {
+		int i = 23;
+		i = i * 13 + type.hashCode();
+		i = i * 13 + number;
+		return i;
+	}
+	
+	@Override
 	public String toString() {
-		if(color == TileColor.FalseJoker) {
-			return ("Sahte Okey");
-		}
-		return (color + " " + number);
+		if(type == TileType.FalseJoker)
+			return type.toString();
+		return (type + " " + number);
 	}
 }

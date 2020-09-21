@@ -1,4 +1,5 @@
 eclipse.preferences.version=1
+encoding//src/gameplay/Okey.java=UTF-8
 encoding//src/gameplay/Player.java=UTF-8
-encoding//src/gameplay/TileColor.java=UTF-8
+encoding//src/gameplay/TileType.java=UTF-8
 encoding//src/main/Main.java=UTF-8
