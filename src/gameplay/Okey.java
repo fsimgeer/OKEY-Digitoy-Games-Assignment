@@ -1,5 +1,6 @@
 package gameplay;
 
+import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
 import output.PrettyPrinter;
@@ -19,6 +20,7 @@ public class Okey {
 	Tile faceUpTile = new Tile(TileType.FalseJoker, 0);
 	int firstDie = 0;
 	int secondDie = 0;
+	ArrayList<Player> closestToWin = new ArrayList<>();
 	
 	PrettyPrinter pp = new PrettyPrinter();
 	
@@ -98,11 +100,23 @@ public class Okey {
 				temp++;
 			}
 		}
-				
-		players[0].matchTiles(okey);
-		//players[1].matchTiles(okey);
-		//players[2].matchTiles(okey);
-		//players[3].matchTiles(okey);
+		
+		int max = 0;
+		for(int i = 0; i < playerCount; i++) {
+			int current = players[i].organizeHand(okey);
+			if(current == max) {
+				closestToWin.add(players[i]);
+			} else if(current > max && max > 0) {
+				max = current;
+				closestToWin.clear();
+				closestToWin.add(players[i]);
+			} else if(current > max && max == 0){
+				max = current;
+				closestToWin.add(players[i]);
+			}
+		}
+		
+		System.out.println();
 	}
 	
 	// methods	
@@ -128,6 +142,10 @@ public class Okey {
 	
 	public int getSecondDie() {
 		return secondDie;
+	}
+	
+	public ArrayList<Player> getWinner() {
+		return closestToWin;
 	}
 	
 	

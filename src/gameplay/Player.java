@@ -12,43 +12,30 @@ public class Player {
 	private String name;
 	private List<Tile> tiles = new ArrayList<>();
 	public PrettyPrinter pp = new PrettyPrinter();
+	ArrayList<ArrayList<Tile>> sets;
+	ArrayList<Tile> ones = new ArrayList<>();
+	int numOfOkey = 0;
+	boolean duplicateHand = false;
 	
 	public Player(String name) {
 		this.name = name;
 	}
 	
+	public String getName() {
+		return name;
+	}
+
+	public boolean isDuplicateHand() {
+		return duplicateHand;
+	}
+	
 	public void addTile(Tile tile) {
 		tiles.add(tile);
 	}
+
 	
-	public void matchTiles(Tile okey) {
-		/*
-		okey = new Tile(TileType.Yellow, 3);
-		
-		tiles.clear();
-		tiles.add(new Tile(TileType.Yellow, 1));
-		tiles.add(new Tile(TileType.Yellow, 2));
-		tiles.add(new Tile(TileType.Yellow, 3));
-		tiles.add(new Tile(TileType.Yellow, 4));
-		tiles.add(new Tile(TileType.Yellow, 5));
-		tiles.add(new Tile(TileType.Yellow, 6));
-		tiles.add(new Tile(TileType.Yellow, 7));
-		tiles.add(new Tile(TileType.Yellow, 8));
-		tiles.add(new Tile(TileType.Yellow, 9));
-		tiles.add(new Tile(TileType.FalseJoker, 0));
-		tiles.add(new Tile(TileType.Yellow, 1));
-		tiles.add(new Tile(TileType.Yellow, 2));
-		tiles.add(new Tile(TileType.Yellow, 3));
-		tiles.add(new Tile(TileType.Yellow, 4));
-		tiles.add(new Tile(TileType.Yellow, 5));
-		tiles.add(new Tile(TileType.Yellow, 6));
-		tiles.add(new Tile(TileType.Yellow, 7));
-		tiles.add(new Tile(TileType.Yellow, 8));
-		tiles.add(new Tile(TileType.Yellow, 9));
-		tiles.add(new Tile(TileType.FalseJoker, 0));
-		*/
-		List<Tile> list = tiles;
-		int numOfOkey = 0;
+	public int organizeHand(Tile okey) {
+		List<Tile> list = new ArrayList<Tile>(tiles);
 		
 		for(int i = list.size() - 1; i >= 0; i--) {
 			Tile current = list.get(i);
@@ -87,19 +74,13 @@ public class Player {
 		ArrayList<ArrayList<Integer>> bluesList = new ArrayList<>(findGroupsOfSameColoredTiles(blues));
 		ArrayList<ArrayList<Integer>> blacksList = new ArrayList<>(findGroupsOfSameColoredTiles(blacks));
 		ArrayList<ArrayList<Integer>> redsList = new ArrayList<>(findGroupsOfSameColoredTiles(reds));
-		
-		System.out.println("Yellows:" + yellows.toString());
-		System.out.println("Blues:\t" + blues.toString());
-		System.out.println("Blacks:\t" + blacks.toString());
-		System.out.println("Reds:\t" + reds.toString());
-		System.out.println();
 
-		ArrayList<ArrayList<Tile>> sets = new ArrayList<>();
+		sets = new ArrayList<>();
 		
-		addToSet(yellows, yellowsList, TileType.Yellow, sets, 3);
-		addToSet(blues, bluesList, TileType.Blue, sets, 3);
-		addToSet(blacks, blacksList, TileType.Black, sets, 3);
-		addToSet(reds, redsList, TileType.Red, sets, 3);
+		addToSet(yellows, yellowsList, TileType.Yellow, 3);
+		addToSet(blues, bluesList, TileType.Blue, 3);
+		addToSet(blacks, blacksList, TileType.Black, 3);
+		addToSet(reds, redsList, TileType.Red, 3);
 		
 		ArrayList<ArrayList<Tile>> sameNumbered = findGroupsOfSameNumberedTiles(yellows, blues, blacks, reds, 3);
 
@@ -113,10 +94,10 @@ public class Player {
 		blacksList = new ArrayList<>(findGroupsOfSameColoredTiles(blacks));
 		redsList = new ArrayList<>(findGroupsOfSameColoredTiles(reds));
 		
-		addToSet(yellows, yellowsList, TileType.Yellow, sets, 2);
-		addToSet(blues, bluesList, TileType.Blue, sets, 2);
-		addToSet(blacks, blacksList, TileType.Black, sets, 2);
-		addToSet(reds, redsList, TileType.Red, sets, 2);
+		addToSet(yellows, yellowsList, TileType.Yellow, 2);
+		addToSet(blues, bluesList, TileType.Blue, 2);
+		addToSet(blacks, blacksList, TileType.Black, 2);
+		addToSet(reds, redsList, TileType.Red, 2);
 		
 		sameNumbered = findGroupsOfSameNumberedTiles(yellows, blues, blacks, reds, 2);
 
@@ -125,17 +106,80 @@ public class Player {
 				sets.add(t);
 		}
 		
-		for(ArrayList<Tile> t : sets) {
-			System.out.println(t.toString());
+		for(int i : yellows) {
+			ones.add(new Tile(TileType.Yellow, i));
+		}
+		for(int i : blues) {
+			ones.add(new Tile(TileType.Blue, i));
+		}
+		for(int i : blacks) {
+			ones.add(new Tile(TileType.Black, i));
+		}
+		for(int i : reds) {
+			ones.add(new Tile(TileType.Red, i));
+		}
+				
+		int points = givePoints() + numOfOkey;
+		
+		for(ArrayList<Tile> li : sets) {
+			for(int i = 0; i < li.size(); i++) {
+				Tile t = li.get(i);
+				if(t.equals(okey)) {
+					li.remove(i);
+					li.add(i, new Tile(TileType.FalseJoker, 0));
+				}
+			}
 		}
 		
-		System.out.println(organizeSets(sets));
+		int duplicateHandPoint = (numberOfDuplicates() + numOfOkey) * 2;
+		if(duplicateHandPoint > points) {
+			points = duplicateHandPoint;
+			duplicateHand = true;
+			sets.clear();
+			ones.clear();
+			
+			list = new ArrayList<Tile>(tiles);
+			
+			for(int i = list.size() - 1; i >= 0; i--) {
+				Tile current = list.get(i);
+				if(current.getType() == TileType.FalseJoker) {
+					list.remove(current);
+					list.add(new Tile(okey.getType(), okey.getNumber()));
+				}
+			}
+			
+			addDuplicatesToSet(list);
+			
+			for(Tile t : list)
+				ones.add(t);
+		}
+		
+		// System.out.println(points);
+		
+		return points;
 	}
 	
 	// methods
 	private int numberOfDuplicates() {
 		Set<Tile> s = new HashSet<>(tiles);
 		return (tiles.size() - s.size());
+	}
+	
+	private void addDuplicatesToSet(List<Tile> list) {
+		for(int i = 0; i < list.size(); i++) {
+			for(int j = i + 1; j < list.size(); j++) {
+				if(list.get(i).equals(list.get(j))) {
+					ArrayList<Tile> newList = new ArrayList<>();
+					newList.add(new Tile(list.get(i).getType(), list.get(i).getNumber()));
+					newList.add(new Tile(list.get(i).getType(), list.get(i).getNumber()));
+					sets.add(newList);
+				}
+			}
+		}
+		for(ArrayList<Tile> li : sets) {
+			list.removeAll(li);
+		}
+		
 	}
 	
 	private ArrayList<ArrayList<Integer>> findGroupsOfSameColoredTiles(ArrayList<Integer> list){
@@ -206,7 +250,7 @@ public class Player {
 						size13 = el.size();
 					}
 				}
-				System.out.println(size2 + " " + size13);
+
 				if(size13 >= size2) {
 					for(ArrayList<Integer> el : temp) {
 						if(el.contains(13)) {
@@ -266,7 +310,7 @@ public class Player {
 		return temp;
 	}
 	
-	private void addToSet(ArrayList<Integer> list, ArrayList<ArrayList<Integer>> list2, TileType color, ArrayList<ArrayList<Tile>> sets, int tileCount) {
+	private void addToSet(ArrayList<Integer> list, ArrayList<ArrayList<Integer>> list2, TileType color, int tileCount) {
 		ArrayList<Tile> temp;
 		for(int i = 0; i < list2.size(); i++) {
 			if(list2.get(i).size() >= tileCount) {
@@ -281,7 +325,7 @@ public class Player {
 		}
 	}
 	
-	private int organizeSets(ArrayList<ArrayList<Tile>> sets) {
+	private int givePoints() {
 		ArrayList<Integer> setsTileCounts = new ArrayList<>();
 		
 		for(int i = 0; i < sets.size(); i++) {
@@ -292,7 +336,8 @@ public class Player {
 		int numOf4 = 0;
 		int numOf3 = 0;
 		int numOf2 = 0;
-		int numOfRemaining = 0;
+		int other = 0;
+		int other2 = 0;
 		
 		for(int i = 0; i < sets.size(); i++) {
 			if(setsTileCounts.get(i) == 5)
@@ -303,32 +348,277 @@ public class Player {
 				numOf3++;
 			else if(setsTileCounts.get(i) == 2)
 				numOf2++;
+			else if(other == 0)
+				other = setsTileCounts.get(i);
+			else
+				other2 = setsTileCounts.get(i);
 		}
-		numOfRemaining = setsTileCounts.size() - (numOf5 + numOf4 + numOf3 + numOf2);
-		System.out.println(numOfRemaining);
-				
-		System.out.println(setsTileCounts.toString());
-		System.out.println("num of 4: " + numOf4);
-		System.out.println("num of 3: " + numOf3);
+			
+		// System.out.println(setsTileCounts.toString());
 		
-		if(numOf4 == 2) {
-			if(numOf3 == 2) {
+		if(numOf4 == 3) {
+			if(numOf3 == 1) {					// 4 4 3(1) 3
+				return 14;
+			} else {
+				if(numOf2 > 0)					// 4 4 3(1) 2
+					return 13;
+				else							// 4 4 3(1)
+					return 11;
+			}
+		} else if(numOf4 == 2) {
+			if(numOf3 == 2) {					// 4 4 3 3
 				return 14;
 			} else if(numOf3 == 1) {
-				if(numOf2 > 0)
+				if(numOf2 > 0)					// 4 4 3 2...
 					return 13;
-				else
+				else							// 4 4 3
 					return 11;
+			} else if(numOf3 == 0) {
+				if(other > 0) {					// 4 4 (5<other<8)
+					return 14;
+				} else {
+					if(numOf2 >= 2)				// 4 4 2 2
+						return 12;
+					else if(numOf2 == 1)		// 4 4 2
+						return 10;
+					else						// 4 4
+						return 8;
+				}
 			}
 		} else if(numOf4 == 1) {
 			if(numOf3 == 2) {
-				
+				if(numOf5 == 1)					// 5 3(1) 3 3
+					return 14;
+				else if(numOf2 > 0)				// 4 3 3 2...
+					return 12;
+				else							// 4 3 3
+					return 10;
 			} else if(numOf3 == 1) {
-				
+				if(numOf5 == 1) {				// 5 3(1) 3
+					return 11;
+				} else if(other > 0) {			// 4 3 (5<other<9)
+					if(other == 6)				// 4 3 (3 3)
+						return 13;
+					else						// 4 3 (4 3)
+						return 14;
+				} else {
+					if(numOf2 >= 2)				// 4 3 2 2
+						return 11;
+					else if(numOf2 == 1)		// 4 3 2
+						return 9;
+					else						// 4 3
+						return 7;
+				}
+						
+			} else if(numOf3 == 0) {
+				if(numOf5 == 2) {				// 5 3(2) 3(1)
+					return 13;
+				} else if(numOf5 == 1) {
+					if(other > 0)				// 5 4 (3 3)
+						return 14;
+					else
+						if(numOf2 >= 2)			// 4(1) 4 2 2
+							return 12;
+						else if(numOf2 == 1)	// 4(1) 4 2
+							return 10;
+						else					// 4(1) 4
+							return 8;
+				} else {
+					if(other > 0) {				// 4 (5<other<12)
+						if(other == 6)			// 4 (3 3)
+							return 10;
+						else if(other < 9)		// 4 (4 3)
+							return 11;
+						else if(other < 10)		// 4 (4 3 2)
+							return 13;
+						else					// 4 (4 3 3)
+							return 14;
+					} else {
+						if(numOf2 >= 3)			// 4 2 2 2
+							return 10;
+						else if(numOf2 == 2)	// 4 2 2
+							return 8;
+						else if(numOf2 == 1)	// 4 2
+							return 6;
+						else					// 4
+							return 4;
+					}
+				}
+			}
+		} else {
+			if(numOf5 == 3) {					// 5 3(2) 3(2)
+				return 13;
+			} else if(numOf5 == 2) {
+				if(numOf3 == 1)					// 5 3(2) 3
+					return 13;
+				else
+					if(numOf2 >= 1)				// 5 3(2) 2
+						return 12;
+					else						// 5 3(2)
+						return 10;
+			} else if(numOf5 == 1) {
+				if(other > 0)					// 5 (5<other<11)
+					if(other <= 7)
+						if(numOf3 == 1)			// 5 (3 3) 3
+							return 14;
+						else
+							if(numOf2 >= 1)		// 5 (3 3) 2
+								return 13;
+							else				// 5 (3 3)
+								return 11;
+					else if(other == 8)			// 5 (3 3 (2))
+						return 13;
+					else						// 5 (3 3 3)
+						return 14;
+			} else {
+				if(other2 > 0) {
+					if(other2 == 6) {
+						if(other == 6) {		// (3 3) (3 3)
+							return 12;
+						} else if(other == 7) {	// (3 3) (4 3)
+							return 13;
+						} else {	// (3 3) (4 4)
+							return 14;
+						}
+					} else if(other2 == 7) {
+						if(other == 6) {		// (4 3) (3 3)
+							return 13;
+						} else {				// (4 3) (4 3)
+							return 14;
+						}
+					} else						// (4 4) (3 3)
+						return 14;
+				} else {
+					if(other > 0) {
+						if(other == 6) {
+							if(numOf3 == 3) {				// (4 (2)) 3 3 3
+								return 13;
+							} else if(numOf3 == 2) {		// (4 (2)) 3 3
+								return 12;
+							} else if(numOf3 == 1) {
+								if(numOf2 > 0) {			// (4 (2)) 3 2
+									return 11;
+								} else {					// (4 (2)) 3
+									return 9;
+								}
+							} else {
+								if(numOf2 >= 2) {			// (4 (2)) 2 2
+									return 10;
+								} else if(numOf2 == 1) {	// (4 (2)) 2
+									return 8;
+								} else {					// (4 (2))
+									return 6;
+								}
+							}
+						} else if(other == 7) {
+							if(numOf3 == 3) {				// (5 (2)) 3 3 3
+								return 14;
+							} else if(numOf3 == 2) {		// (5 (2)) 3 3
+								return 13;
+							} else if(numOf3 == 1) {
+								if(numOf2 > 0) {			// (5 (2)) 3 2
+									return 12;
+								} else {					// (5 (2)) 3
+									return 10;
+								}
+							} else {
+								if(numOf2 >= 2) {			// (5 (2)) 2 2
+									return 11;
+								} else if(numOf2 == 1) {	// (5 (2)) 2
+									return 9;
+								} else {					// (5 (2))
+									return 7;
+								}
+							}
+						} else if(other <= 9) {
+							if(numOf3 == 2) {				// (5 3) 3 3
+								return 14;
+							} else if(numOf3 == 1) {
+								if(numOf2 > 0) {			// (5 3) 3 2
+									return 13;
+								} else {					// (5 3) 3
+									return 11;
+								}
+							} else {
+								if(numOf2 >= 2) {			// (5 3) 2 2
+									return 12;
+								} else if(numOf2 == 1) {	// (5 3) 2
+									return 10;
+								} else {					// (5 3)
+									return 8;
+								}
+							}
+						} else if(other == 10) {
+							if(numOf3 == 1) {				// (5 3 (2)) 3
+								return 13;
+							} else {
+								if(numOf2 == 1) {			// (5 3 (2)) 2
+									return 12;
+								} else {					// (5 3 (2))
+									return 10;
+								}
+							}
+						} else if(other <= 12) {
+							if(numOf3 == 1) {				// (5 3 3) 3
+								return 14;
+							} else {
+								if(numOf2 == 1) {			// (5 3 3) 2
+									return 13;
+								} else {					// (5 3 3)
+									return 11;
+								}
+							}
+						} else if(other == 13) {			// (5 3 3 (2))
+							return 13;
+						} else {							// (5 3 3 3)
+							return 14;
+						}
+					} else {
+						if(numOf3 >= 4) {					// 3 3 3 3
+							return 12;
+						} else if(numOf3 == 3) {
+							if(numOf2 > 0) {				// 3 3 3 2
+								return 11;
+							} else {						// 3 3 3
+								return 9;
+							}
+						} else if(numOf3 == 2) {
+							if(numOf2 >= 2) {				// 3 3 2 2
+								return 10;
+							} else if(numOf2 == 1) {		// 3 3 2					
+								return 8;
+							} else {						// 3 3
+								return 6;
+							}
+						} else if(numOf3 == 1) {
+							if(numOf2 >= 3) {				// 3 2 2 2
+								return 9;
+							} else if(numOf2 == 2) {		// 3 2 2				
+								return 7;
+							} else if(numOf2 == 1) {		// 3 2					
+								return 6;
+							} else {						// 3
+								return 3;
+							}
+						} else {
+							if(numOf2 >= 4) {				// 2 2 2 2
+								return 8;
+							} else if(numOf2 == 3) {		// 2 2 2				
+								return 6;
+							} else if(numOf2 == 2) {		// 2 2					
+								return 4;
+							} else if(numOf2 == 1) {		// 2				
+								return 2;
+							} else {						// -
+								return 0;
+							}
+						}
+					}
+				}
 			}
 		}
 		
-		return 0;
+		return -1;
 	}
 	
 	public void print(Tile okey) {
@@ -355,5 +645,24 @@ public class Player {
 			}
 		}
 		System.out.println("]");
+	}
+	
+	public void printOrganizedHand(Tile okey) {
+		
+		System.out.print("[\n");
+		
+		for(ArrayList<Tile> t : sets) {
+			System.out.println("\t" + t.toString());
+		}
+		for(int i = 0; i < numOfOkey; i++) {
+			System.out.print("\t");
+			pp.printGreenString(okey.toString());
+			System.out.println();
+		}
+		for(Tile t : ones) {
+			System.out.println("\t" + t.toString());
+		}
+
+		System.out.print("]");
 	}
 }
